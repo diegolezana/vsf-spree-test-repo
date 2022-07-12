@@ -6,6 +6,7 @@ import getCategory from './api/getCategory';
 import logIn from './api/logIn';
 import logOut from './api/logOut';
 import getCurrentUser from './api/getCurrentUser';
+import updateCurrentUser from './api/updateCurrentUser';
 import isGuest from './api/isGuest';
 import changePassword from './api/changePassword';
 import registerUser from './api/registerUser';
@@ -26,6 +27,7 @@ import saveCheckoutBillingAddress from './api/saveCheckoutBillingAddress';
 import createAuthIntegration from './api/authentication/integration';
 import createInternationalizationIntegration from './api/internationalization/integration';
 import getOrCreateCart from './api/getOrCreateCart';
+import getOrder from './api/getOrder';
 import getOrders from './api/getOrders';
 import saveGuestCheckoutEmail from './api/saveGuestCheckoutEmail';
 import getShipments from './api/getShipments';
@@ -42,6 +44,7 @@ import addToWishlist from './api/addToWishlist';
 import removeFromWishlist from './api/removeFromWishlist';
 import deleteWishlist from './api/deleteWishlist';
 import changeCurrency from './api/changeCurrency';
+import deleteAddress from './api/deleteAddress';
 
 const defaultSettings = {
   backendUrl: 'https://demo.spreecommerce.org',
@@ -85,6 +88,7 @@ const { createApiClient } = apiClientFactory<any, any>({
     getProducts,
     getCategory,
     getCurrentUser,
+    updateCurrentUser,
     logIn,
     logOut,
     isGuest,
@@ -105,6 +109,7 @@ const { createApiClient } = apiClientFactory<any, any>({
     saveCheckoutShippingAddress,
     saveCheckoutBillingAddress,
     getOrCreateCart,
+    getOrder,
     getOrders,
     saveGuestCheckoutEmail,
     getShipments,
@@ -120,7 +125,8 @@ const { createApiClient } = apiClientFactory<any, any>({
     addToWishlist,
     removeFromWishlist,
     deleteWishlist,
-    changeCurrency
+    changeCurrency,
+    deleteAddress
   },
   extensions: [tokenExtension]
 });

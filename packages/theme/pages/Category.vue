@@ -100,8 +100,9 @@
               :is-in-wishlist="isInWishlist({ product })"
               :is-added-to-cart="isInCart({ product })"
               :link="localePath(`/p/${productGetters.getId(product)}/${productGetters.getSlug(product)}`)"
+              :wishlist-icon="isWishlistDisabled ? false : undefined"
               class="products__product-card"
-              @click:wishlist="!isInWishlist({ product }) ? addItemToWishlist({ product }) : removeItemFromWishlist({ product })"
+              @click:wishlist="handleWishlistClick(product)"
               @click:add-to-cart="addItemToCart({ product, quantity: 1 })"
             />
           </transition-group>
@@ -127,7 +128,7 @@
               :score-rating="3"
               :is-in-wishlist="isInWishlist({ product })"
               :link="localePath(`/p/${productGetters.getId(product)}/${productGetters.getSlug(product)}`)"
-              @click:wishlist="!isInWishlist({ product }) ? addItemToWishlist({ product }) : removeItemFromWishlist({ product })"
+              @click:wishlist="handleWishlistClick(product)"
               @click:add-to-cart="addItemToCart({ product, quantity: 1 })"
             >
               <template #configuration>
@@ -141,11 +142,18 @@
               </template>
               <template #actions>
                 <SfButton
-                  class="sf-button--text desktop-only"
-                  style="margin: 0 0 1rem auto; display: block;"
-                  @click="() => {}"
+                  v-if="!isInWishlist({ product })"
+                  class="sf-button--text wishlist__button desktop-only"
+                  @click="handleWishlistClick(product)"
                 >
                   {{ $t('Save for later') }}
+                </SfButton>
+                <SfButton
+                  v-else
+                  class="sf-button--text wishlist__button desktop-only"
+                  @click="handleWishlistClick(product)"
+                >
+                  {{ $t('Remove from wishlist') }}
                 </SfButton>
               </template>
             </SfProductCardHorizontal>
@@ -210,7 +218,7 @@ import {
   SfProperty
 } from '@storefront-ui/vue';
 import { computed } from '@nuxtjs/composition-api';
-import { useCart, useWishlist, productGetters, useFacet, facetGetters } from '@vue-storefront/spree';
+import { useCart, useWishlist, productGetters, useFacet, facetGetters, useUser, wishlistGetters } from '@vue-storefront/spree';
 import { useUiHelpers, useUiState } from '~/composables';
 import { onSSR } from '@vue-storefront/core';
 import LazyHydrate from 'vue-lazy-hydration';
@@ -229,7 +237,8 @@ export default {
     const uiState = useUiState();
     const { addItem: addItemToCart, isInCart } = useCart();
     const { result, search, loading, error } = useFacet();
-    const { addItem: addItemToWishlist, isInWishlist, removeItem: removeItemFromWishlist } = useWishlist();
+    const { wishlist, addItem: addItemToWishlist, isInWishlist, removeItem: removeItemFromWishlist } = useWishlist();
+    const { isAuthenticated } = useUser();
     const products = computed(() => facetGetters.getProducts(result.value));
     const categoryTree = computed(() => facetGetters.getCategoryTree(result.value));
     const breadcrumbs = computed(() => facetGetters.getBreadcrumbs(result.value));
@@ -244,6 +253,18 @@ export default {
       const category = items.find(({ isCurrent, items }) => isCurrent || items.find(({ isCurrent }) => isCurrent));
       return category?.label || items[0]?.label;
     });
+
+    const isWishlistDisabled = computed(() => wishlistGetters.isWishlistDisabled(wishlist.value));
+
+    const handleWishlistClick = async (product) => {
+      if (!isAuthenticated.value) {
+        uiState.toggleLoginModal();
+      } else if (!isInWishlist({ product })) {
+        await addItemToWishlist({ product });
+      } else {
+        await removeItemFromWishlist({ product });
+      }
+    };
 
     onSSR(async () => {
       await search(th.getFacetsFromURL());
@@ -260,11 +281,11 @@ export default {
       pagination,
       activeCategory,
       breadcrumbs,
-      addItemToWishlist,
       addItemToCart,
-      removeItemFromWishlist,
       isInWishlist,
-      isInCart
+      isInCart,
+      handleWishlistClick,
+      isWishlistDisabled
     };
   },
   components: {
@@ -439,5 +460,9 @@ export default {
       margin-top: 3.75rem;
     }
   }
+}
+.wishlist__button{
+  margin: 0 0 1rem auto;
+  display: block;
 }
 </style>

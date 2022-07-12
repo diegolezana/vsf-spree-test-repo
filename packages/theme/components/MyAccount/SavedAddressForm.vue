@@ -1,7 +1,7 @@
 <template>
   <ValidationObserver v-slot="{ handleSubmit }">
     <form
-      id="shipping-details-form"
+      id="savedAddress-details-form"
       class="form"
       @submit.prevent="handleSubmit(submitForm)"
     >
@@ -12,7 +12,7 @@
           class="form__element"
         >
           <SfInput
-            data-cy="shipping-details-input_firstName"
+            data-cy="savedAddress-details-input_firstName"
             v-model="form.firstName"
             name="firstName"
             label="First Name"
@@ -27,7 +27,7 @@
           class="form__element"
         >
           <SfInput
-            data-cy="shipping-details-input_lastName"
+            data-cy="savedAddress-details-input_lastName"
             v-model="form.lastName"
             name="lastName"
             label="Last Name"
@@ -38,12 +38,12 @@
         </ValidationProvider>
       </div>
       <ValidationProvider
-        rules="required|min:5"
+        rules="required|min:2"
         v-slot="{ errors }"
         class="form__element"
       >
         <SfInput
-          data-cy="shipping-details-input_streetName"
+          data-cy="savedAddress-details-input_streetName"
           v-model="form.addressLine1"
           name="streetName"
           label="Street Name"
@@ -53,11 +53,10 @@
         />
       </ValidationProvider>
       <SfInput
-        data-cy="shipping-details-input_apartment"
+        data-cy="savedAddress-details-input_apartment"
         v-model="form.addressLine2"
         name="apartment"
         label="House/Apartment number"
-        required
         class="form__element"
       />
       <div class="form__horizontal">
@@ -67,7 +66,7 @@
           class="form__element"
         >
           <SfInput
-            data-cy="shipping-details-input_city"
+            data-cy="savedAddress-details-input_city"
             v-model="form.city"
             name="city"
             label="City"
@@ -83,7 +82,7 @@
           class="form__element"
         >
           <SfSelect
-            data-cy="shipping-details-input_state"
+            data-cy="savedAddress-details-input_state"
             class="form__select sf-select--underlined"
             v-model="form.state"
             name="state"
@@ -109,7 +108,7 @@
           class="form__element"
         >
           <SfInput
-            data-cy="shipping-details-input_zipCode"
+            data-cy="savedAddress-details-input_zipCode"
             v-model="form.postalCode"
             name="zipCode"
             label="Zip-code"
@@ -125,7 +124,7 @@
           class="form__element"
         >
           <SfSelect
-            data-cy="shipping-details-select_country"
+            data-cy="savedAddress-details-select_country"
             class="form__select sf-select--underlined"
             v-model="form.country"
             name="country"
@@ -150,7 +149,7 @@
         class="form__element"
       >
         <SfInput
-          data-cy="shipping-details-input_phoneNumber"
+          data-cy="savedAddress-details-input_phoneNumber"
           v-model="form.phone"
           name="phone"
           label="Phone number"
@@ -201,7 +200,7 @@ extend('oneOf', {
 });
 
 export default {
-  name: 'ShippingAddressForm',
+  name: 'SavedAddressForm',
 
   components: {
     SfInput,

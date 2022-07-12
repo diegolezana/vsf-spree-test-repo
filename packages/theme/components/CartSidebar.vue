@@ -28,6 +28,7 @@
                 :regular-price="$n(cartGetters.getItemPrice(product).regular, 'currency')"
                 :special-price="cartGetters.getItemPrice(product).special && $n(cartGetters.getItemPrice(product).special, 'currency')"
                 :stock="99999"
+                :link="localePath(`/p/${cartGetters.getItemVariantId(product)}/${cartGetters.getItemSlug(product)}`)"
                 @click:remove="removeItem({ product: { id: product.id } })"
                 class="collected-product"
               >
@@ -35,6 +36,7 @@
                   <div class="collected-product__properties">
                     <SfProperty
                       v-for="(attribute, key) in cartGetters.getItemAttributes(product, ['color', 'size'])"
+                      v-if="attribute"
                       :key="key"
                       :name="key"
                       :value="attribute"
@@ -52,6 +54,25 @@
                     />
                   </div>
                 </template>
+                <template #actions>
+                    <SfButton
+                      v-if="!isInWishlist({ product }) && !isWishlistDisabled"
+                      class="sf-button--text desktop-only"
+                      @click="handleSaveForLaterClick(product)"
+                    >
+                      Save for later
+                    </SfButton>
+                  <p
+                    v-else-if="!isWishlistDisabled"
+                    class="wishlist__text desktop-only"
+                  >
+                    {{ $t('Product already in your wishlist') }}
+                  </p>
+                  <p
+                    v-else
+                    >{{ }}</p>
+
+                </template>
                 <!-- @TODO: remove if https://github.com/vuestorefront/storefront-ui/issues/2022 is done -->
                 <template #more-actions>{{  }}</template>
               </SfCollectedProduct>
@@ -60,11 +81,6 @@
         </div>
         <div v-else key="empty-cart" class="empty-cart">
           <div class="empty-cart__banner">
-            <SfImage
-              alt="Empty bag"
-              class="empty-cart__image"
-              src="/icons/empty-cart.svg"
-            />
             <SfHeading
               title="Your cart is empty"
               :level="2"
@@ -123,9 +139,10 @@ import {
   SfQuantitySelector
 } from '@storefront-ui/vue';
 import { computed } from '@nuxtjs/composition-api';
-import { useCart, cartGetters } from '@vue-storefront/spree';
+import { useCart, cartGetters, useWishlist } from '@vue-storefront/spree';
 import { useUiState } from '~/composables';
 import debounce from 'lodash.debounce';
+import {wishlistGetters} from '@vue-storefront/spree';
 
 export default {
   name: 'Cart',
@@ -146,11 +163,17 @@ export default {
     const products = computed(() => cartGetters.getItems(cart.value));
     const totals = computed(() => cartGetters.getTotals(cart.value));
     const totalItems = computed(() => cartGetters.getTotalItems(cart.value));
-
+    const { wishlist, addItem: addItemToWishlist, isInWishlist } = useWishlist();
+    const isWishlistDisabled = computed(() => wishlistGetters.isWishlistDisabled(wishlist.value));
     const updateQuantity = debounce(async ({ product, quantity }) => {
-      console.log('debug:updateQuantity', product, quantity);
       await updateItemQty({ product, quantity });
     }, 500);
+
+    const handleSaveForLaterClick = async(product) => {
+      if (!isInWishlist({product})) {
+        await Promise.all([addItemToWishlist({product}), removeItem({product})]);
+      }
+    };
 
     return {
       updateQuantity,
@@ -161,7 +184,10 @@ export default {
       toggleCartSidebar,
       totals,
       totalItems,
-      cartGetters
+      cartGetters,
+      handleSaveForLaterClick,
+      isWishlistDisabled,
+      isInWishlist
     };
   }
 };
@@ -265,4 +291,12 @@ export default {
     }
   }
 }
+
+.wishlist__text {
+  text-decoration: underline;
+  color: gray;
+  font-family: var(--font-family--secondary);
+  font-size: var(--font-size--sm);
+}
+
 </style>

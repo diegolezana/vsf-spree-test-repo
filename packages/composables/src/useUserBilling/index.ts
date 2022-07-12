@@ -1,7 +1,8 @@
 import {
   Context,
   useUserBillingFactory,
-  UseUserBillingFactoryParams
+  UseUserBillingFactoryParams,
+  Logger
 } from '@vue-storefront/core';
 
 const params: UseUserBillingFactoryParams<any, any> = {
@@ -11,8 +12,8 @@ const params: UseUserBillingFactoryParams<any, any> = {
     return { addresses };
   },
 
-  deleteAddress: async (context: Context) => {
-    console.log('Not implemented: Delete billing address');
+  deleteAddress: async (context: Context, { address }) => {
+    await context.$spree.api.deleteAddress(address?._id);
     const addresses = await context.$spree.api.getAddresses();
     return { addresses };
   },
@@ -29,7 +30,7 @@ const params: UseUserBillingFactoryParams<any, any> = {
   },
 
   setDefaultAddress: async (context: Context) => {
-    console.log('Not implemented: Set default billing address');
+    Logger.debug('Not implemented: Set default billing address');
     const addresses = await context.$spree.api.getAddresses();
     return { addresses };
   }

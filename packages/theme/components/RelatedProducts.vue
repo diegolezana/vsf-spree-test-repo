@@ -9,7 +9,7 @@
           <SfProductCard
             :title="productGetters.getName(product)"
             :image="productGetters.getCoverImage(product)"
-            :regular-price="$n(productGetters.getFormattedPrice(productGetters.getPrice(product).regular), 'currency')"
+            :regular-price="$n(productGetters.getPrice(product).regular, 'currency')"
             :special-price="productGetters.getPrice(product).special && $n(productGetters.getPrice(product).special, 'currency')"
             :max-rating="5"
             :score-rating="productGetters.getAverageRating(product)"
@@ -17,8 +17,9 @@
             :is-in-wishlist="isInWishlist({ product })"
             :is-added-to-cart="isInCart({ product })"
             :link="localePath(`/p/${productGetters.getId(product)}/${productGetters.getSlug(product)}`)"
+            :wishlist-icon="isWishlistDisabled ? false : undefined"
             class="product-card"
-            @click:wishlist="!isInWishlist({ product }) ? addItemToWishlist({ product }) : removeProductFromWishlist(product)"
+            @click:wishlist="handleWishlistClick(product)"
             @click:add-to-cart="addItemToCart({ product, quantity: 1 })"
           />
         </SfCarouselItem>
@@ -27,15 +28,16 @@
   </SfSection>
 </template>
 
-<script lang="ts">
+<script>
 import {
   SfCarousel,
   SfProductCard,
   SfSection,
   SfLoader
 } from '@storefront-ui/vue';
-import { productGetters, useWishlist, wishlistGetters, useCart } from '@vue-storefront/spree';
-import { computed } from '@vue/composition-api';
+import { productGetters, useWishlist, useCart, useUser, wishlistGetters } from '@vue-storefront/spree';
+import { computed } from '@nuxtjs/composition-api';
+import { useUiState } from '~/composables';
 
 export default {
   name: 'RelatedProducts',
@@ -52,19 +54,29 @@ export default {
   },
   setup() {
     const { addItem: addItemToCart, isInCart } = useCart();
-    const { addItem: addItemToWishlist, isInWishlist, removeItem: removeItemFromWishlist, wishlist } = useWishlist();
-    const removeProductFromWishlist = (productItem) => {
-      const productsInWhishlist = computed(() => wishlistGetters.getItems(wishlist.value));
-      const product = productsInWhishlist.value.find(wishlistProduct => wishlistProduct.variant.sku === productItem.sku);
-      removeItemFromWishlist({ product });
+    const { wishlist, addItem: addItemToWishlist, isInWishlist, removeItem: removeItemFromWishlist } = useWishlist();
+    const { isAuthenticated } = useUser();
+    const { toggleLoginModal } = useUiState();
+
+    const isWishlistDisabled = computed(() => wishlistGetters.isWishlistDisabled(wishlist.value));
+
+    const handleWishlistClick = async (product) => {
+      if (!isAuthenticated.value) {
+        toggleLoginModal();
+      } else if (!isInWishlist({ product })) {
+        await addItemToWishlist({ product });
+      } else {
+        await removeItemFromWishlist({ product });
+      }
     };
+
     return {
       productGetters,
-      addItemToWishlist,
       isInWishlist,
-      removeProductFromWishlist,
       addItemToCart,
-      isInCart
+      isInCart,
+      handleWishlistClick,
+      isWishlistDisabled
     };
   }
 };

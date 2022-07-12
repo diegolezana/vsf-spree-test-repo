@@ -64,9 +64,11 @@
             :max-rating="5"
             :score-rating="productGetters.getAverageRating(product)"
             :show-add-to-cart-button="false"
-            :is-on-wishlist="false"
+            :is-in-wishlist="isInWishlist({ product })"
             :link="localePath(`/p/${productGetters.getId(product)}/${productGetters.getSlug(product)}`)"
+            :wishlist-icon="isWishlistDisabled ? false : undefined"
             class="carousel__item__product"
+            @click:wishlist="handleWishlistClick(product)"
           />
         </SfCarouselItem>
       </SfCarousel>
@@ -117,7 +119,7 @@ import {
   SfButton
 } from '@storefront-ui/vue';
 import { computed, onMounted, useContext } from '@nuxtjs/composition-api';
-import { useFacet, facetGetters, productGetters } from '@vue-storefront/spree';
+import { useFacet, facetGetters, productGetters, useUser, useWishlist, wishlistGetters } from '@vue-storefront/spree';
 import InstagramFeed from '~/components/InstagramFeed.vue';
 import NewsletterModal from '~/components/NewsletterModal.vue';
 import LazyHydrate from 'vue-lazy-hydration';
@@ -148,10 +150,13 @@ export default {
   },
   setup() {
     const { $config } = useContext();
-    const { toggleNewsletterModal } = useUiState();
+    const { toggleNewsletterModal, toggleLoginModal } = useUiState();
     const { search, result } = useFacet('home');
+    const { isAuthenticated } = useUser();
+    const { wishlist, addItem: addItemToWishlist, isInWishlist, removeItem: removeItemFromWishlist } = useWishlist();
 
     const products = computed(() => facetGetters.getProducts(result.value));
+    const isWishlistDisabled = computed(() => wishlistGetters.isWishlistDisabled(wishlist.value));
 
     onMounted(async () => {
       await search({ categorySlug: 'categories/women' });
@@ -224,9 +229,18 @@ export default {
       }
     ];
 
-    const onSubscribe = (emailAddress) => {
-      console.log(`Email ${emailAddress} was added to newsletter.`);
+    const onSubscribe = () => {
       toggleNewsletterModal();
+    };
+
+    const handleWishlistClick = async (product) => {
+      if (!isAuthenticated.value) {
+        toggleLoginModal();
+      } else if (!isInWishlist({ product })) {
+        await addItemToWishlist({ product });
+      } else {
+        await removeItemFromWishlist({ product });
+      }
     };
 
     return {
@@ -235,7 +249,10 @@ export default {
       banners,
       heroes,
       products,
-      productGetters
+      productGetters,
+      isInWishlist,
+      handleWishlistClick,
+      isWishlistDisabled
     };
   }
 };
